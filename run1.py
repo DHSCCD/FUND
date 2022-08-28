@@ -3,6 +3,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
+from PyQt5.QtWidgets import QTextBrowser
 import time
 import threading
 
@@ -34,18 +35,20 @@ class MyWindow(QMainWindow, Find_Window):
     def run_test(self):
         for i in self.kind:
             Price_now = pyupbit.get_current_price(i)
-            av = pyupbit.get_ohlcv(i, interval="hours2", count=25)
+            av = pyupbit.get_ohlcv(i, interval="minutes15", count=96)
             close = av['close']
-            ma5_2h = close.rolling(21).mean()
+            ma5_2h = close.rolling(96).mean()
+
 
             if Price_now<ma5_2h.iloc[-1]:
                 print(f'ok{i}')
                 self.ticker_selected.emit(f'{i}')
 
             time.sleep(0.3)
+            print("check")
         self.finished.emit('end_task')
 
-    def ticker_append(self,emit_str):
+    def ticker_append(self, emit_str):
         self.Monitor.append(emit_str)
 
 app = QApplication(sys.argv)
