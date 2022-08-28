@@ -28,6 +28,7 @@ class MyWindow(QMainWindow, Find_Window):
         self.thread.start()
         self.pushButton.setEnabled(False)
 
+
     def end_task(self, end_str):
         print(f'{end_str}')
         self.pushButton.setEnabled(True)
@@ -38,7 +39,6 @@ class MyWindow(QMainWindow, Find_Window):
             av = pyupbit.get_ohlcv(i, interval="minutes15", count=96)
             close = av['close']
             ma5_2h = close.rolling(96).mean()
-
 
             if Price_now<ma5_2h.iloc[-1]:
                 print(f'ok{i}')
