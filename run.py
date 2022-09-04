@@ -38,7 +38,13 @@ class MyWindow(QMainWindow, Find_Window):
             close = av['close']
             ma5_2h = close.rolling(21).mean()
 
-            if Price_now<ma5_2h.iloc[-1]:
+            #볼린저밴드 test
+            av_20 = close.rolling(20).mean()
+            av__20 = close.rolling(20).std()
+            final = av_20 - 2 * av__20
+
+
+            if Price_now<ma5_2h.iloc[-1] and Price_now >final[-1]:
                 print(f'ok{i}')
                 self.ticker_selected.emit(f'{i}')
 
