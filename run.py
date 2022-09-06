@@ -1,3 +1,4 @@
+import pandas as pd
 import pyupbit
 import sys
 from PyQt5.QtWidgets import *
@@ -5,6 +6,28 @@ from PyQt5.QtCore import *
 from PyQt5 import uic
 import time
 import threading
+
+access_key = "1gy5EpKHaCt0vyhyVzxC6K0EIuN4nVxv46LAAx37"
+secret_key = "8lfVspOwK0HryXANUBdMeXpHfgFe9K2PcaWkpus4"
+
+pd.set_option('display.max_rows', 100)
+pd.set_option('display.max_columns', 100)
+
+
+# # 예약 매수 취소
+# upbit = pyupbit.Upbit(access_key,secret_key)
+# ret = upbit.cancel_order('be0c4343-bd9d-4aef-b5fb-cf62f4ea5178')
+# print(ret)
+
+# 매수
+# upbit = pyupbit.Upbit(access_key,secret_key)
+# ret = upbit.buy_limit_order("KRW-XRP", 10, 1000)   #코인이름, 가격, 갯수
+# print(ret)
+
+# #매도
+# upbit = pyupbit.Upbit(access_key,secret_key)
+# ret = upbit.buy_limit_order("KRW-XRP", 10, 1000)   #코인이름, 가격, 갯수
+# print(ret)
 
 Find_Window=uic.loadUiType("C:/Users/zzune/PycharmProjects/FUND/text.ui")[0]
 
@@ -33,10 +56,31 @@ class MyWindow(QMainWindow, Find_Window):
 
     def run_test(self):
         for i in self.kind:
+            # 일봉 20일 이평선
             Price_now = pyupbit.get_current_price(i)
             av = pyupbit.get_ohlcv(i, interval="hours2", count=25)
             close = av['close']
             ma5_2h = close.rolling(21).mean()
+
+            # 4시간봉 7일 이평선
+            av = pyupbit.get_ohlcv(i, interval="hours4", count=50)
+            close = av['close']
+            ma5_4 = close.rolling(42).mean()
+
+            # 15분봉 7일 이평선
+            av = pyupbit.get_ohlcv(i, interval="minutes15", count=700)
+            close = av['close']
+            ma5_15 = close.rolling(672).mean()
+
+            # 30분봉 7일 이평선
+            av = pyupbit.get_ohlcv(i, interval="minutes30", count=700)
+            close = av['close']
+            ma5_30 = close.rolling(336).mean()
+
+            # 30분봉 7일 이평선
+            av = pyupbit.get_ohlcv(i, interval="hours1", count=700)
+            close = av['close']
+            ma5_1h = close.rolling(168).mean()
 
             #볼린저밴드 test
             av_20 = close.rolling(20).mean()
@@ -44,9 +88,12 @@ class MyWindow(QMainWindow, Find_Window):
             final = av_20 - 2 * av__20
 
 
-            if Price_now<ma5_2h.iloc[-1] and Price_now >final[-1]:
-                print(f'ok{i}')
-                self.ticker_selected.emit(f'{i}')
+            if Price_now >final[-1]:
+                print(f'{i}')
+                if Price_now<ma5_2h.iloc[-1] and Price_now<ma5_4.iloc[-1] and Price_now<ma5_15.iloc[-1] and Price_now<ma5_30.iloc[-1] and Price_now<ma5_1h.iloc[-1]:
+                    print(f'{i}')
+                    self.ticker_selected.emit(f'{i}')
+
 
             time.sleep(0.3)
         self.finished.emit('end_task')
