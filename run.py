@@ -51,7 +51,7 @@ class MyWindow(QMainWindow, Find_Window):
         self.pushButton.setEnabled(False)
 
     def end_task(self, end_str):
-        print(f'{end_str}')
+        # print(f'{end_str}')
         self.pushButton.setEnabled(True)
 
     def run_test(self):
@@ -61,6 +61,7 @@ class MyWindow(QMainWindow, Find_Window):
             av = pyupbit.get_ohlcv(i, interval="hours2", count=25)
             close = av['close']
             ma5_2h = close.rolling(21).mean()
+            print(ma5_2h)
 
             # 4시간봉 7일 이평선
             av = pyupbit.get_ohlcv(i, interval="hours4", count=50)
@@ -72,15 +73,30 @@ class MyWindow(QMainWindow, Find_Window):
             close = av['close']
             ma5_15 = close.rolling(672).mean()
 
-            # 30분봉 7일 이평선
+            # 30분봉 14일 이평선
             av = pyupbit.get_ohlcv(i, interval="minutes30", count=700)
             close = av['close']
-            ma5_30 = close.rolling(336).mean()
+            ma14_30 = close.rolling(672).mean()
 
-            # 30분봉 7일 이평선
+            # 30분봉 25일 이평선
+            av = pyupbit.get_ohlcv(i, interval="minutes30", count=1300)
+            close = av['close']
+            ma25_30 = close.rolling(1200).mean()
+
+            # 1분봉 7일 이평선
             av = pyupbit.get_ohlcv(i, interval="hours1", count=700)
             close = av['close']
             ma5_1h = close.rolling(168).mean()
+
+            # 1시간봉 200일 이평선
+            av = pyupbit.get_ohlcv(i, interval="hours1", count=5000)
+            close = av['close']
+            ma200_1h = close.rolling(4800).mean()
+
+            # 1시간봉 150 이평선
+            av = pyupbit.get_ohlcv(i, interval="hours4", count=3800)
+            close = av['close']
+            ma150_1h = close.rolling(3600).mean()
 
             #볼린저밴드 test
             av_20 = close.rolling(20).mean()
@@ -90,16 +106,17 @@ class MyWindow(QMainWindow, Find_Window):
 
             if Price_now >final[-1]:
                 print(f'{i}')
-                if Price_now<ma5_2h.iloc[-1] and Price_now<ma5_4.iloc[-1] and Price_now<ma5_15.iloc[-1] and Price_now<ma5_30.iloc[-1] and Price_now<ma5_1h.iloc[-1]:
-                    print(f'{i}')
-                    self.ticker_selected.emit(f'{i}')
+                self.ticker_selected.emit("Hello")
+                # if  Price_now>ma5_2h:
+                #      print(f'{i}')
 
 
             time.sleep(0.3)
-        self.finished.emit('end_task')
+
 
     def ticker_append(self,emit_str):
         self.Monitor.append(emit_str)
+
 
 app = QApplication(sys.argv)
 window = MyWindow()
