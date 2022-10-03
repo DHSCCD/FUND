@@ -73,22 +73,29 @@ class MyWindow(QMainWindow, Window):
         print(f'{end_str}')
         self.startButton.setEnabled(True)
 
+
     def run_test(self):
-        print("run_test 시작")
+        print("1")
 
 
         btc_last = self.btc['last']
 
 
-        # time.sleep(0.3)
+
         self.appender.emit(f'{btc_last}')
-        print("run_test 종료")
+        print("2")
+        time.sleep(5)
+        print("4")
+        threading.Timer(5,self.run_test).start()
+
 
     def coin_append(self, emit_str):
-        self.monitor.append(emit_str)
-        print("coin_append 종료")
-        time.sleep(5)
-        self.run_test()
+         self.monitor.append(emit_str)
+         print("3")
+         # time.sleep(5)
+
+
+
 
 
 
@@ -114,7 +121,6 @@ app.exec_()
 # # USDT의 잔고 조회
 # balance = binance.fetch_balance()
 # my_balance=balance['USDT']
-
 
 
 
