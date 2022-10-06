@@ -45,7 +45,7 @@ class MyWindow(QMainWindow, Window):
         self.StartButton.clicked.connect(self.start_tast)
         self.BalanceButton.clicked.connect(self.mybalance)
         self.CoinAdd.clicked.connect(self.AddCoin)
-        print("테스트")
+
         self.appender.connect(self.coin_append)
 
         self.timeout.connect(self.time2)      #시간 thread
@@ -56,12 +56,12 @@ class MyWindow(QMainWindow, Window):
 
 
     def AddCoin(self):
-        #coin = []
+        coin = []
 
         a = self.CoinName.text()
-        #coin.append(a)
-       # print(coin)
-        print("테스트")
+        coin.append(a)
+        print(coin)
+
 
         #for printCoin in coin:
 
