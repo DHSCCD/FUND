@@ -13,6 +13,7 @@ import time
 import threading
 
 
+
 # 파일로부터 apiKey, Secret 읽기
 with open("api.txt") as f:
     lines = f.readlines()
@@ -22,38 +23,62 @@ with open("api.txt") as f:
 # 창 불러오기
 Window = uic.loadUiType("C:/Users/zzune/PycharmProjects/FUND/BINANCE.ui")[0]
 
-binance = ccxt.binance(config=
-                                    {
-                                        'apiKey': api_key,
-                                        'secret': secret
-                                    })
+binance = ccxt.binance(config={
+    'apiKey': api_key,
+    'secret': secret,
+    'enableRateLimit': True,
+    'options': {
+        'defaultType': 'future'
+    }
+})
 
 class MyWindow(QMainWindow, Window):
     appender = pyqtSignal(str)
+    timeout = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
-        self.btc = binance.fetch_ticker("BTC/USDT")
+        self.btc = binance.fetch_ticker("ETH/USDT")
 
         self.StartButton.clicked.connect(self.start_tast)
         self.BalanceButton.clicked.connect(self.mybalance)
-
-
+        self.CoinAdd.clicked.connect(self.AddCoin)
+        print("테스트")
         self.appender.connect(self.coin_append)
 
-    def time(self):
-        self.thread = threading.Thread(target=self.time1)
-        self.thread.start()
+        self.timeout.connect(self.time2)      #시간 thread
 
 
-    def time1(self):
-        now = datetime.datetime.now()
-        print(now)
+
+
+
+
+    def AddCoin(self):
+        #coin = []
+
+        a = self.CoinName.text()
+        #coin.append(a)
+       # print(coin)
+        print("테스트")
+
+        #for printCoin in coin:
+
+
+        #    self.tableWidget.setItem(0,0, QTableWidgetItem(printCoin))
+
+
+
+
+
+    def Trading(self):
+        a = "Hello"
+        # set.TradingRecord.setItem(0,0,QTableWidgetItem(str(a)))
+        self.TradingRecord.setItem(0, 0, QTableWidgetItem("출력확인"))
+
 
     def mybalance(self):
-        print("잔고실행")
         balance = binance.fetch_balance()
         balance_usdt=balance['USDT']
         free = balance_usdt['free']  #잔액
@@ -64,9 +89,35 @@ class MyWindow(QMainWindow, Window):
         self.Total.setText(f'{total}')
 
     def start_tast(self):
-        self.thread = threading.Thread(target=self.run_test)
-        self.thread.start()
+        self.thread1 = threading.Thread(target=self.run_test)
+        self.thread1.start()
+
+        self.thread2 = threading.Thread(target=self.time1)
+        self.thread2.start()
+
+        self.thread3 = threading.Thread(target=self.Trading)
+        self.thread3.start()
+
         self.StartButton.setEnabled(False)
+
+    def time1(self):
+
+        now = datetime.datetime.now()
+        today = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        print(type(today))
+        self.timeout.emit(today)
+
+
+
+        time.sleep(5)
+        threading.Timer(5000, self.time1()).start()
+
+    def time2(self, nowtime):
+        print(f'{nowtime}')
+        self.Time.setText(nowtime)
+
+
 
 
     def end_tast(self, end_str):
@@ -75,30 +126,24 @@ class MyWindow(QMainWindow, Window):
 
 
     def run_test(self):
-        print("1")
 
+        eth_ohlcv = binance.fetch_ohlcv("ETH/USDT",timeframe='30m', limit=241)
+        df = pd.DataFrame(eth_ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+        df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+        df.set_index('datetime', inplace=True)
+        # print(df)
 
-        btc_last = self.btc['last']
+        ma5 = df['close'].rolling(window=240).mean()
+        self.appender.emit(f'{ma5[-1]}')
 
-
-
-        self.appender.emit(f'{btc_last}')
-        print("2")
         time.sleep(5)
-        print("4")
-        threading.Timer(5,self.run_test).start()
 
+        threading.Timer(5000,self.run_test()).start()
 
     def coin_append(self, emit_str):
          self.monitor.append(emit_str)
-         print("3")
+
          # time.sleep(5)
-
-
-
-
-
-
 
     print("문장 끝")
 

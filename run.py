@@ -27,7 +27,16 @@ binance = ccxt.binance(config={
     }
 })
 
-coin = binance.fetch_ohlcv("BTC/USDT")
 
-markets=binance.load_markets()
-print(markets)
+
+
+
+btc_ohlcv = binance.fetch_ohlcv("BTC/USDT")
+df = pd.DataFrame(btc_ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+df.set_index('datetime', inplace=True)
+# print(df)
+
+ma5 = df['close'].rolling(window=5).mean()
+print(ma5)
+print(ma5[-1])
