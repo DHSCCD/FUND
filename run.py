@@ -1,9 +1,3 @@
-import datetime
-
-import ccxt     #바이낸스
-import pprint      #딕셔너리를 보기 좋게 출력하기 위한 모듈
-import pandas as pd
-import pandas as pd
 import pyupbit
 import sys
 from PyQt5.QtWidgets import *
@@ -12,31 +6,55 @@ from PyQt5 import uic
 import time
 import threading
 
-with open("api.txt") as f:
-    lines = f.readlines()
-    api_key = lines[0].strip()
-    secret = lines[1].strip()
+Find_Window=uic.loadUiType("C:/Users/zzune/PycharmProjects/FUND/text.ui")[0]
+
+class MyWindow(QMainWindow, Find_Window):
+    ticker_selected = pyqtSignal(str)
+    finished = pyqtSignal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.kind = pyupbit.get_tickers(fiat = "KRW")
+
+        self.pushButton.clicked.connect(self.start_task)
+
+        self.ticker_selected.connect(self.ticker_append)
+        self.finished.connect(self.end_task)
+
+    def start_task(self):
+        self.thread = threading.Thread(target=self.run_test)
+        self.thread.start()
+        self.pushButton.setEnabled(False)
+
+    def end_task(self, end_str):
+        print(f'{end_str}')
+        self.pushButton.setEnabled(True)
+
+    def run_test(self):
+        for i in self.kind:
+            Price_now = pyupbit.get_current_price(i)
+            av = pyupbit.get_ohlcv(i, interval="hours2", count=25)
+            close = av['close']
+            ma5_2h = close.rolling(21).mean()
+
+            #볼린저밴드 test
+            av_20 = close.rolling(20).mean()
+            av__20 = close.rolling(20).std()
+            final = av_20 - 2 * av__20
 
 
-binance = ccxt.binance(config={
-    'apiKey': api_key,
-    'secret': secret,
-    'enableRateLimit': True,
-    'options': {
-        'defaultType': 'future'
-    }
-})
+            if Price_now<ma5_2h.iloc[-1] and Price_now >final[-1]:
+                print(f'ok{i}')
+                self.ticker_selected.emit(f'{i}')
 
+            time.sleep(0.3)
+        self.finished.emit('end_task')
 
+    def ticker_append(self,emit_str):
+        self.Monitor.append(emit_str)
 
-
-
-btc_ohlcv = binance.fetch_ohlcv("BTC/USDT")
-df = pd.DataFrame(btc_ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
-df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
-df.set_index('datetime', inplace=True)
-# print(df)
-
-ma5 = df['close'].rolling(window=5).mean()
-print(ma5)
-print(ma5[-1])
+app = QApplication(sys.argv)
+window = MyWindow()
+window.show()
+app.exec_()

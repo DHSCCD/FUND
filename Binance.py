@@ -15,7 +15,7 @@ import threading
 
 
 # 파일로부터 apiKey, Secret 읽기
-with open("api.txt") as f:
+with open("C:/Users/zzune/PycharmProjects/FUND/api.txt") as f:
     lines = f.readlines()
     api_key = lines[0].strip()
     secret = lines[1].strip()
@@ -31,10 +31,11 @@ binance = ccxt.binance(config={
         'defaultType': 'future'
     }
 })
-
+coin = []
 class MyWindow(QMainWindow, Window):
     appender = pyqtSignal(str)
     timeout = pyqtSignal(str)
+    deletecoin = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -45,29 +46,45 @@ class MyWindow(QMainWindow, Window):
         self.StartButton.clicked.connect(self.start_tast)
         self.BalanceButton.clicked.connect(self.mybalance)
         self.CoinAdd.clicked.connect(self.AddCoin)
+        self.DeleteButton.clicked.connect(self.DeleteCoin)
 
         self.appender.connect(self.coin_append)
 
         self.timeout.connect(self.time2)      #시간 thread
 
-
-
+        self.deletecoin.connect(self)
 
 
 
     def AddCoin(self):
-        coin = []
+
+        num = 0
 
         a = self.CoinName.text()
         coin.append(a)
-        print(coin)
 
 
-        #for printCoin in coin:
+        for i in coin:
+            self.CoinList.setItem(0, num, QTableWidgetItem(i))
+            num = num+1
+
+    def ReAddCoin(self):
+        print("test")
+        # self.CoinList.removeColumn(0)
+        # print(coin)
+        # for i in coin:
+        #     self.CoinList.setItem(0, num, QTableWidgetItem(i))
+        #     num = num+1
+
+    def DeleteCoin(self):
+
+        a = self.CoinDelete.text()
+        num = int(a)
 
 
-        #    self.tableWidget.setItem(0,0, QTableWidgetItem(printCoin))
-
+        del coin[num-1]
+        self.deletecoin.emit()
+        # self.deletecoin.emit()
 
 
 
