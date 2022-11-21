@@ -16,8 +16,8 @@
   <widget class="QTextBrowser" name="Free">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>20</y>
+     <x>10</x>
+     <y>10</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -26,8 +26,8 @@
   <widget class="QTextBrowser" name="Used">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>20</y>
+     <x>140</x>
+     <y>10</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -36,8 +36,8 @@
   <widget class="QTextBrowser" name="Total">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>20</y>
+     <x>260</x>
+     <y>10</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -59,8 +59,8 @@
   <widget class="QPushButton" name="BalanceButton">
    <property name="geometry">
     <rect>
-     <x>570</x>
-     <y>30</y>
+     <x>380</x>
+     <y>10</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -72,13 +72,13 @@
     <string>MyBalance</string>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="monitor">
+  <widget class="QTextBrowser" name="monitor1">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>130</y>
-     <width>231</width>
-     <height>181</height>
+     <x>10</x>
+     <y>120</y>
+     <width>141</width>
+     <height>241</height>
     </rect>
    </property>
    <property name="openExternalLinks">
@@ -109,6 +109,9 @@
    </property>
    <property name="alternatingRowColors">
     <bool>true</bool>
+   </property>
+   <property name="textElideMode">
+    <enum>Qt::ElideMiddle</enum>
    </property>
    <property name="showGrid">
     <bool>true</bool>
@@ -178,37 +181,42 @@
    </row>
    <column>
     <property name="text">
-     <string>A</string>
+     <string>COIN</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>B</string>
+     <string>LEVERAGE</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>C</string>
+     <string>ISOLATED</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>D</string>
+     <string>ENTRYPRICE</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>E</string>
+     <string>SIZE(USDT)</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>F</string>
+     <string>MARGIN(USDT)</string>
     </property>
    </column>
    <column>
     <property name="text">
-     <string>G</string>
+     <string>PNL(USDT)</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>ROD%</string>
     </property>
    </column>
   </widget>
@@ -327,6 +335,85 @@
      <width>113</width>
      <height>31</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>90</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>15분봉 근접 코인</string>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="monitor2">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>120</y>
+     <width>171</width>
+     <height>241</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="monitor3">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>120</y>
+     <width>181</width>
+     <height>241</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="monitor4">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>120</y>
+     <width>171</width>
+     <height>241</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="monitor5">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>120</y>
+     <width>181</width>
+     <height>241</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>80</y>
+     <width>41</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RCI값</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>90</y>
+     <width>56</width>
+     <height>12</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>급등 코인</string>
    </property>
   </widget>
  </widget>
