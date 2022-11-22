@@ -290,7 +290,12 @@ class MyWindow(QMainWindow, Window):
     def end_tast(self, end_str):
         print(f'{end_str}')
         self.startButton.setEnabled(True)
-
+    def resp(self, market, leverage):
+        resp = binance.fapiPrivate_post_leverage \
+                ({
+                'symbol': market['id'],
+                'leverage': leverage
+            })
 app = QApplication(sys.argv)
 window = MyWindow()
 window.show()
@@ -301,6 +306,10 @@ app.exec_()
 
 
 
+
+
+
+print("**********************************************************************")
 
 
 
