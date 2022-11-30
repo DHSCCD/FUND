@@ -1,4 +1,7 @@
+import json
 import pprint
+import threading
+import json
 import ccxt
 from PyQt5 import uic
 import pandas as pd
@@ -35,37 +38,6 @@ binance = ccxt.binance(config={
 
 
 
-markets = binance.load_markets()
-symbol = "ETH/USDT"
-market = binance.market(symbol)
-leverage = 5
-#레버리지 설정
-resp = binance.fapiPrivate_post_leverage\
-        ({
-            'symbol': market['id'],
-            'leverage': leverage
-        })
-
-
-
-
-order = binance.create_market_buy_order(
-    symbol=symbol,
-    amount=0.001
-)#티커, 수량, 가격
-order = binance.create_market_sell_order(
-    symbol="BTC/USDT",
-    amount=0.001
-)
-
-order = binance.create_market_sell_order(
-    symbol="BTC/USDT",
-    amount=0.001,
-)
-order = binance.create_market_buy_order(
-    symbol="BTC/USDT",
-    amount=0.001,
-)
 
 
 
@@ -74,6 +46,45 @@ order = binance.create_market_buy_order(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# markets = binance.load_markets()
+# symbol = "ETH/USDT"
+# market = binance.market(symbol)
+# leverage = 1
+
+# #ETH 종가
+# eth = binance.fetch_ticker(symbol)
+# eth_close = eth['close']
+#
+# resp = binance.fapiPrivate_post_leverage \
+#                 ({
+#                 'symbol': market['id'],
+#                 'leverage': 2
+#             })
+# resp
+#
+#
+# print(6/eth_close)
+# order = binance.create_market_sell_order(
+#     symbol="ETH/USDT",
+#     amount=7/eth_close
+# )
+
+# # balance = binance.fetch_balance(params={"type": "future"})
 
 
 

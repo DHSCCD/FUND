@@ -1,4 +1,6 @@
+import sys
 
+print(sys.version)
 
 print("naver", "kakao", "samsung", sep=";")
 #띄어쓰기를 하지않고 사이에 말을 넣는 방법

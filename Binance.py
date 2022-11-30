@@ -21,11 +21,19 @@ binance = ccxt.binance(config={
     'options': {'defaultType': 'future'}
 })
 
+
 class MyWindow(QMainWindow, Window):
     appender = pyqtSignal(str)
     timeout = pyqtSignal(str)
     TableCoin = pyqtSignal(str)
     rci_result = pyqtSignal(str)
+
+    rci_result_long = pyqtSignal(str, float)
+    rci_result_short = pyqtSignal(str, float)
+
+    myBalance = pyqtSignal(float, float, float)
+
+    EP = pyqtSignal(float)
     account_count = 0
     coin = []
     # markets = binance.fetch_tickers()
@@ -45,66 +53,47 @@ class MyWindow(QMainWindow, Window):
         #self.BalanceButton.clicked.connect(self.mybalance)
         self.CoinAdd.clicked.connect(self.AddCoin)
         self.DeleteButton.clicked.connect(self.DeleteCoin)
-        self.appender.connect(self.coin_append)
+        # self.appender.connect(self.coin_append)
         self.timeout.connect(self.time2)      #시간 thread
         self.TableCoin.connect(self.ReAddCoin)
-        self.rci_result.connect(self.rci_append)
-    def start_tast(self):
-        self.thread1 = threading.Thread(target=self.MovingAverage)
-        self.thread1.start()
 
-        self.thread2 = threading.Thread(target=self.time1)
+        self.rci_result.connect(self.rci_append)
+
+        self.rci_result_long.connect(self.buy_long)
+        self.rci_result_short.connect(self.buy_short)
+
+        self.myBalance.connect(self.balancemonitor)
+    def start_tast(self):
+        # self.thread1 = threading.Thread(target=self.MovingAverage)
+        # self.thread1.start()
+
+        self.thread2 = threading.Thread(target=self.time1())#시간
         self.thread2.start()
 
-        self.thread3 = threading.Thread(target=self.Trading)
+        self.thread3 = threading.Thread(target=self.Trading)#현재표
         self.thread3.start()
 
-        self.thread5 = threading.Thread(target=self.mybalance())
+        self.thread5 = threading.Thread(target=self.mybalance)#나의 지갑
         self.thread5.start()
 
-        self.thread6 = threading.Thread(target=self.buycoin())
-        self.thread6.start()
-
-        self.thread7 = threading.Thread(target=self.rci_3lines())
-        self.thread7.start()
+        self.whenSearching()
 
         self.StartButton.setEnabled(False)
-    def coin_append(self, emit_str):
-        self.monitor1.append(emit_str)
-    def buycoin(self):
-        # order = binance.create_market_buy_order(symbol="BTC/USDT", amount=0.001)
-        print("확인용")
-    def MovingAverage(self):
-        print("test1")
-        if len(self.coin)==0:
-            print("test2")
-            self.appender.emit("Please Add Coin")
-
-        elif len(self.coin)!=0:
-            print("test3")
-            for a in self.coin:
-                eth_ohlcv = binance.fetch_ohlcv(a, timeframe='1d', limit=5)
-                df = pd.DataFrame(eth_ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
-                df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
-                df.set_index('datetime', inplace=True)
-
-                ma5 = df['close'].rolling(window=5).mean()
-
-                Price = binance.fetch_ticker(a)
-                NowPrice = Price['close']
-
-                if ma5[-1]==NowPrice:
-                    self.appender.emit(a)
-                    time.sleep(5)
-
-                else:
-                    self.appender.emit("Searching Again")
-        threading.Timer(600, self.MovingAverage).start()
+    def whenSearching(self):
+        self.thread7 = threading.Thread(target=self.rci_3lines())
+        self.thread7.start()
     def rci_3lines(self):
+        break1 = "F"
+        print("1")
         if len(self.coin)==0:
+            print("코인이 없습니다.")
+            threading.Timer(5, self.rci_3lines).start()
             self.rci_result.emit("Please Add Coin")
+
         else:
+            print("2")
             for kk in self.coin:
+                print("test3")
                 # z-score (총합 - 평균)/표준편차
                 pole_count = 14
                 eth_ohlcv = binance.fetch_ohlcv(kk, timeframe='15m', limit=pole_count + 1)
@@ -121,7 +110,7 @@ class MyWindow(QMainWindow, Window):
                 coin_close = [i[4] for i in eth_ohlcv]  # 마감값
                 score = [0] * len(coin_close)
                 num = 0
-
+                print("3")
                 for i in range(len(coin_close)):
                     if st_list[i] != 0:
                         score[i] = (coin_close[i] - av_list[i]) / st_list[i]
@@ -136,9 +125,9 @@ class MyWindow(QMainWindow, Window):
                 pole_result_30m = [0] * 3
                 pole_result_1h = [0] * 3
 
-                time = ['15m', '30m', '1h']
-
-                for t in time:
+                Time = ['15m', '30m', '1h']
+                print("4")
+                for t in Time:
                     count_result = 0
                     for pole in pole_count:
                         eth_ohlcv_RCI14 = binance.fetch_ohlcv(kk, timeframe=t, limit=pole)
@@ -180,59 +169,58 @@ class MyWindow(QMainWindow, Window):
                         elif t == '1h':
                             pole_result_1h[count_result] = rci_result
                             count_result += 1
+                print("5")
+                if pole_result_15m[0]>0:
+                    #self.coin.remove(kk)
+                    self.rci_result_long.emit(kk, df['close'][-1].item())
+                    self.whenSearchingAgain
+                    break
 
-                if pole_result_15m[0]>70 and pole_result_15m[1]>50 and pole_result_15m[2]>50 and score[-1]>1.2 and\
-                        pole_result_30m[0] > 70 and pole_result_30m[1] > 50 and pole_result_30m[2] > 50 and score[-1] > 1.2 and\
-                                pole_result_1h[0] > 70 and pole_result_1h[1] > 70 and pole_result_1h[2] > 70 and score[-1] > 1.2:
-                    self.coin.remove(kk)
-                    self.rci_result.emit(kk)
-
-                elif pole_result_15m[0]<-70 and pole_result_15m[1]<-50 and pole_result_15m[2]<-50 and score[-1]<-1.2 and\
-                        pole_result_30m[0] <-70 and pole_result_30m[1] < -50 and pole_result_30m[2] < -50 and score[-1] <-1.2 and\
-                                pole_result_1h[0] <-70 and pole_result_1h[1] < -70 and pole_result_1h[2] < -70 and score[-1] <-1.2:
-                    self.coin.remove(kk)
-                    self.rci_result.emit(kk)
-
-                elif pole_result_15m[0]>90 and pole_result_15m[1]>50 and pole_result_15m[2]>50 and score[-1]>1.2 and\
-                        pole_result_30m[0] >90 and pole_result_30m[1] > 50 and pole_result_30m[2] > 50 and score[-1] > 1.2 and\
-                                pole_result_1h[0] > 70 and pole_result_1h[1] > 70 and pole_result_1h[2] > 70 and score[-1] > 1.2:
-                    self.coin.remove(kk)
-                    self.rci_result.emit(kk)
-
-                elif pole_result_15m[0]<-90 and pole_result_15m[1]<-50 and pole_result_15m[2]<-50 and score[-1]<-1.2 and\
-                        pole_result_30m[0] <-90 and pole_result_30m[1] < -50 and pole_result_30m[2] < -50 and score[-1] <-1.2 and\
-                                pole_result_1h[0] <-70 and pole_result_1h[1] < -50 and pole_result_1h[2] < -50 and score[-1] <-1.2:
-                    self.coin.remove(kk)
-                    self.rci_result.emit(kk)
+                elif pole_result_15m[0]<0:
+                    #self.coin.remove(kk)
+                    self.whenSearchingAgain()
+                    self.rci_result_short.emit(kk, df['close'][-1].item())
+                    break
+                # #조건1
+                # if pole_result_15m[0]>70 and pole_result_15m[1]>50 and pole_result_15m[2]>50 and score[-1]>1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result_long.emit(kk, df['close'][-1])
+                #     break
+                #
+                # elif pole_result_15m[0]<-70 and pole_result_15m[1]<-50 and pole_result_15m[2]<-50 and score[-1]<-1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result_short.emit(kk, df['close'][-1])
+                #     break
+                # if pole_result_15m[0]>70 and pole_result_15m[1]>50 and pole_result_15m[2]>50 and score[-1]>1.2 and\
+                #         pole_result_30m[0] > 70 and pole_result_30m[1] > 50 and pole_result_30m[2] > 50 and score[-1] > 1.2 and\
+                #                 pole_result_1h[0] > 70 and pole_result_1h[1] > 70 and pole_result_1h[2] > 70 and score[-1] > 1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result.emit(kk)
+                #
+                # elif pole_result_15m[0]<-70 and pole_result_15m[1]<-50 and pole_result_15m[2]<-50 and score[-1]<-1.2 and\
+                #         pole_result_30m[0] <-70 and pole_result_30m[1] < -50 and pole_result_30m[2] < -50 and score[-1] <-1.2 and\
+                #                 pole_result_1h[0] <-70 and pole_result_1h[1] < -70 and pole_result_1h[2] < -70 and score[-1] <-1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result.emit(kk)
+                #
+                # elif pole_result_15m[0]>90 and pole_result_15m[1]>50 and pole_result_15m[2]>50 and score[-1]>1.2 and\
+                #         pole_result_30m[0] >90 and pole_result_30m[1] > 50 and pole_result_30m[2] > 50 and score[-1] > 1.2 and\
+                #                 pole_result_1h[0] > 70 and pole_result_1h[1] > 70 and pole_result_1h[2] > 70 and score[-1] > 1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result.emit(kk)
+                #
+                # elif pole_result_15m[0]<-90 and pole_result_15m[1]<-50 and pole_result_15m[2]<-50 and score[-1]<-1.2 and\
+                #         pole_result_30m[0] <-90 and pole_result_30m[1] < -50 and pole_result_30m[2] < -50 and score[-1] <-1.2 and\
+                #                 pole_result_1h[0] <-70 and pole_result_1h[1] < -50 and pole_result_1h[2] < -50 and score[-1] <-1.2:
+                #     self.coin.remove(kk)
+                #     self.rci_result.emit(kk)
 
                 else:
                     self.rci_result.emit("Searching Again")
-
-        threading.Timer(600, self.rci_3lines).start()
+                    threading.Timer(5, self.rci_3lines).start()
+                print("6")
     def rci_append(self, emit_str):
         self.monitor2.append(emit_str)
-    def AddCoin(self):
-        num = 0
-        a = self.CoinName.text()
-        self.coin.append(a)
-
-        for i in self.coin:
-            self.CoinList.setItem(0, num, QTableWidgetItem(i))
-            num = num+1
-    def ReAddCoin(self,kk):
-        num = 0
-        self.CoinList.clear()
-        time.sleep(1)
-
-        for i in self.coin:
-             self.CoinList.setItem(0, num, QTableWidgetItem(i))
-             num = num+1
-    def DeleteCoin(self):
-        a = self.CoinDelete.text()
-        num = int(a)
-        del self.coin[num - 1]
-        time.sleep(2)
-        self.TableCoin.emit("Delete")
     def Trading(self):          #매매표
         ScoreList = [[" " for i in range(8)] for j in range(10)]
         balance1 = binance.fetch_balance(params={"type": "future"})
@@ -256,6 +244,7 @@ class MyWindow(QMainWindow, Window):
 
                 ScoreList[count][3]=mine1['entryPrice']
                 self.TradingRecord.setItem(count, 3, QTableWidgetItem(str(round(float(mine1['entryPrice'])), )))
+                #self.EP.emit(ScoreList[count][3])
 
                 ScoreList[count][4]=mine1['notional']
                 self.TradingRecord.setItem(count, 4, QTableWidgetItem(str(round(float(mine1['notional'])), )))
@@ -269,17 +258,134 @@ class MyWindow(QMainWindow, Window):
                 ScoreList[count][7]=str(round(float(mine1['unrealizedProfit']) * 100 / float(mine1['initialMargin']), 2))
                 self.TradingRecord.setItem(count, 7, QTableWidgetItem(str(ScoreList[count][7])))
                 count+=1
+
         threading.Timer(120, self.Trading).start()
+    def buy_long(self, symbol, close):
+        print("Long")
+        order = binance.create_market_buy_order(
+            symbol=symbol,
+            amount=7/close
+        )
+        order
+        print("구매")
+        TP = binance.create_order(
+            symbol=symbol,
+            type="TAKE_PROFIT_MARKET",
+            side="sell",
+            amount=7/close,
+            params={'stopPrice': close*(1 + 0.05/100)}
+        )
+        SP = binance.create_order(
+            symbol=symbol,
+            type="STOP_MARKET",
+            side="sell",
+            amount=7/close,
+            params={'stopPrice': close*(1 - 0.05/100)}
+        )
+        TP
+        SP
+    def buy_short(self, symbol, close):
+        print("Short")
+        order = binance.create_market_sell_order(
+            symbol=symbol,
+            amount=7/close
+        )
+        print("구매")
+        order
+
+        TP = binance.create_order(
+            symbol=symbol,
+            type="TAKE_PROFIT_MARKET",
+            side="buy",
+            amount=7/close,
+            params={'stopPrice': close*0.8}
+        )
+        SP = binance.create_order(
+            symbol=symbol,
+            type="STOP_MARKET",
+            side="buy",
+            amount=7/close,
+            params={'stopPrice': close*1.2}
+        )
+        TP
+        SP
+    def MovingAverage(self):
+        if len(self.coin)==0:
+            self.appender.emit("Please Add Coin")
+
+        elif len(self.coin)!=0:
+            for a in self.coin:
+                eth_ohlcv = binance.fetch_ohlcv(a, timeframe='1d', limit=5)
+                df = pd.DataFrame(eth_ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+                df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+                df.set_index('datetime', inplace=True)
+
+                ma5 = df['close'].rolling(window=5).mean()
+
+                Price = binance.fetch_ticker(a)
+                NowPrice = Price['close']
+
+                if ma5[-1]==NowPrice:
+                    self.appender.emit(a)
+                    time.sleep(5)
+
+                else:
+                    self.appender.emit("Searching Again")
+        threading.Timer(600, self.MovingAverage).start()
+    def coin_append(self, emit_str):
+        self.monitor1.append(emit_str)
     def mybalance(self):
         balance = binance.fetch_balance()
-        balance_usdt=balance['USDT']
-        free = balance_usdt['free']  #잔액
-        used = balance_usdt['used']  #거래 잔액
-        total = balance_usdt['total']  #총잔액
-        self.Free.setText(f'{free}')
-        self.Used.setText(f'{used}')
-        self.Total.setText(f'{total}')
-        #threading.Timer(2.5, self.mybalance()).start()
+        free = balance['USDT']['free']  #잔액
+        used = balance['USDT']['used']  #거래 잔액
+        total = balance['USDT']['total']  #총잔액
+        self.myBalance.emit(free, used, total)
+        threading.Timer(300, self.mybalance).start()
+    def balancemonitor(self, b1, b2, b3):
+        self.Free.setText(f'{b1}')
+        self.Used.setText(f'{b2}')
+        self.Total.setText(f'{b3}')
+    def whenSearchingAgain(self):
+        balance = binance.fetch_balance(params={"type": "future"})
+        positions = balance['info']['positions']
+
+        for coin1 in self.coin:
+            for position in positions:
+                if position["symbol"] == coin1:
+                    if position['initialMargin'] == 0:
+                        self.whenSearching
+                        break
+                    else:#이 조건식의 coin이 배열에 1개만 있을때 적용된다.
+                        threading.Timer(300, self.whenSearchingAgain).start()
+    def ReAddCoin(self,kk):
+        num = 0
+        self.CoinList.clear()
+        time.sleep(1)
+
+        for i in self.coin:
+             self.CoinList.setItem(0, num, QTableWidgetItem(i))
+             num = num+1
+    def DeleteCoin(self):
+        a = self.CoinDelete.text()
+        num = int(a)
+        del self.coin[num - 1]
+        time.sleep(2)
+        self.TableCoin.emit("Delete")
+    def AddCoin(self):
+        num = 0
+        a = self.CoinName.text()
+        self.coin.append(a)
+
+        resp = binance.fapiPrivate_post_leverage \
+                ({
+                'symbol': binance.market(a)['id'],
+                'leverage': 2
+            })
+        resp
+
+        for i in self.coin:
+            self.CoinList.setItem(0, num, QTableWidgetItem(i))
+            num = num+1
     def time1(self):
         now = datetime.datetime.now()
         today = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -290,17 +396,10 @@ class MyWindow(QMainWindow, Window):
     def end_tast(self, end_str):
         print(f'{end_str}')
         self.startButton.setEnabled(True)
-    def resp(self, market, leverage):
-        resp = binance.fapiPrivate_post_leverage \
-                ({
-                'symbol': market['id'],
-                'leverage': leverage
-            })
 app = QApplication(sys.argv)
 window = MyWindow()
 window.show()
 app.exec_()
-
 
 
 
@@ -317,6 +416,37 @@ print("*******")
 
 
 
+# markets = binance.load_markets()
+# symbol = "ETH/USDT"
+# market = binance.market(symbol)
+# leverage = 5
+# #레버리지 설정
+# resp = binance.fapiPrivate_post_leverage\
+#         ({
+#             'symbol': market['id'],
+#             'leverage': leverage
+#         })
+#
+#
+#
+#
+# order = binance.create_market_buy_order(
+#     symbol=symbol,
+#     amount=0.001
+# )#티커, 수량, 가격
+# order = binance.create_market_sell_order(
+#     symbol="BTC/USDT",
+#     amount=0.001
+# )
+#
+# order = binance.create_market_sell_order(
+#     symbol="BTC/USDT",
+#     amount=0.001,
+# )
+# order = binance.create_market_buy_order(
+#     symbol="BTC/USDT",
+#     amount=0.001,
+# )
 
 
 

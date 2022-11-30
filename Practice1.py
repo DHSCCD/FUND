@@ -20,30 +20,3 @@ binance = ccxt.binance(config={
     'enableRateLimit': True,
     'options': {'defaultType': 'future'}
 })
-
-def test():
-    i = 1
-
-    if i == 0:
-        print("Hello")
-    else:
-        for k in range(100):
-            if k == 3:
-                print("for구문 반복", k)
-                break
-            print("for구문 안")
-            print("***********")
-        print("else구문 안")
-        print("***********")
-    print("!!!!!!!!!!!!!!!else out !!!!!!!!!!!!!")
-    threading.Timer(5, test).start()
-
-
-
-
-
-
-print("def구문 아웃")
-print("*********************")
-
-test()
